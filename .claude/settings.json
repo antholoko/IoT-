@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "model": "sonnet",
+  "disableBundledSkills": true,
+  "skillOverrides": {
+    "ux-heuristic-review": "name-only",
+    "ux-iot-dashboards": "name-only",
+    "ux-writing-es": "name-only",
+    "user-manual": "name-only"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(git switch *)",
+      "Bash(docker compose *)",
+      "Bash(php artisan *)",
+      "Bash(composer *)",
+      "Bash(npm run *)",
+      "Bash(npx playwright *)",
+      "Bash(pytest *)",
+      "Bash(go test *)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(gh pr merge *)",
+      "Bash(ssh *)",
+      "Bash(scp *)",
+      "Bash(kubectl *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./**/node_modules/**)",
+      "Read(./**/vendor/**)",
+      "Read(./**/storage/logs/**)",
+      "Bash(git push --force *)",
+      "Bash(rm -rf *)",
+      "Bash(docker volume rm *)",
+      "Bash(docker system prune *)",
+      "WebSearch"
+    ]
+  }
+}

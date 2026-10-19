@@ -1,0 +1,63 @@
+# Entorno de desarrollo — Fase 0
+# Uso: cp infra/.env.example infra/.env && docker compose -f infra/docker-compose.yml up -d
+# ChirpStack, Laravel y el worker se agregan en la Fase 1.
+
+name: iot-dev
+
+services:
+  emqx:
+    image: emqx/emqx:5.8
+    container_name: iot-emqx
+    restart: unless-stopped
+    ports:
+      - "1883:1883"     # MQTT sin TLS, solo desarrollo local
+      - "8883:8883"     # MQTT con TLS
+      - "18083:18083"   # Dashboard EMQX (solo local)
+    environment:
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD}
+    volumes:
+      - emqx-data:/opt/emqx/data
+    healthcheck:
+      test: ["CMD", "emqx", "ctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: iot-timescaledb
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - timescale-data:/var/lib/postgresql/data
+      - ./timescaledb/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: iot-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  emqx-data:
+  timescale-data:
+  redis-data:

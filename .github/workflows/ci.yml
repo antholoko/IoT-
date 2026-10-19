@@ -1,0 +1,49 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Infra y simulador
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Preparar variables de entorno de prueba
+        run: cp infra/.env.example infra/.env
+
+      - name: Validar docker-compose
+        run: docker compose -f infra/docker-compose.yml --env-file infra/.env config -q
+
+      - name: Levantar servicios
+        run: docker compose -f infra/docker-compose.yml --env-file infra/.env up -d --wait
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar simulador
+        run: pip install -r tests/simulator/requirements.txt
+
+      - name: Publicar telemetría de prueba
+        run: python tests/simulator/simulator.py --devices 5 --interval 1 --duration 10
+
+      - name: Verificar hypertable de telemetría
+        run: |
+          docker exec iot-timescaledb psql -U iot -d iot -tAc \
+            "SELECT count(*) FROM timescaledb_information.hypertables WHERE hypertable_name = 'telemetry'" | grep -q 1
+
+      - name: Logs si algo falla
+        if: failure()
+        run: docker compose -f infra/docker-compose.yml --env-file infra/.env logs --tail=100
+
+      - name: Bajar servicios
+        if: always()
+        run: docker compose -f infra/docker-compose.yml --env-file infra/.env down -v

@@ -1,0 +1,25 @@
+# Secretos
+.env
+.env.*
+!.env.example
+secrets/
+
+# Dependencias y builds
+node_modules/
+vendor/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+
+# Laravel
+backend/storage/logs/
+backend/bootstrap/cache/
+
+# Claude Code (configuración personal)
+.claude/settings.local.json
+
+# Sistema
+.DS_Store
+Thumbs.db
